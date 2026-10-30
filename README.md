@@ -45,9 +45,9 @@ Gunakan fitur **Web-Screen**:
 ```bash
 npm run login:vps
 ```
-1. Script akan otomatis memunculkan URL seperti ini:
+1. Script akan otomatis memunculkan URL sesuai jaringan Anda (Tailscale / LAN / Local):
    ```text
-   👉 http://IP-SERVER-ANDA:6080/vnc.html?autoconnect=true
+   👉 http://100.x.x.x:6080/vnc.html?autoconnect=true&resize=remote
    ```
 2. Buka link tersebut di browser HP atau laptop Anda.
 3. Di layar virtual yang muncul:
@@ -67,26 +67,13 @@ Jendela browser Chrome akan terbuka otomatis. Login dan pilih model **Argon**, l
 
 ---
 
-## 🔌 Cara Menghubungkan ke AI Client
+## 🔌 Cara Menghubungkan ke Hermes Agent
 
-### 1. Hermes Agent (CLI)
-Daftarkan server MCP ke Hermes dengan perintah:
+Daftarkan server MCP ke Hermes langsung dari dalam folder proyek:
 ```bash
-hermes mcp add gemini-argon --command node --args /path/ke/gemini-argon-mcp/index.js
+hermes mcp add gemini-argon --command node --args $(pwd)/index.js
 ```
-
-### 2. Claude Desktop (`claude_desktop_config.json`)
-Tambahkan ke konfigurasi Claude Desktop:
-```json
-{
-  "mcpServers": {
-    "gemini-argon": {
-      "command": "node",
-      "args": ["/path/ke/gemini-argon-mcp/index.js"]
-    }
-  }
-}
-```
+*(Saat muncul pertanyaan `Enable all 1 tools? [Y/n]`, tekan **Y** lalu Enter)*.
 
 ---
 
