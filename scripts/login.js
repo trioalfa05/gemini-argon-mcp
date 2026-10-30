@@ -35,7 +35,13 @@ const browser = await puppeteer.launch({
     userDataDir: PROFILE_DIR,
     headless: false,
     defaultViewport: { width: 1280, height: 800 },
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--no-first-run']
+    args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--disable-dev-shm-usage',
+        '--password-store=basic'
+    ]
 });
 
 const pages = await browser.pages();

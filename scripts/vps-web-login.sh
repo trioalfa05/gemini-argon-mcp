@@ -74,6 +74,7 @@ DISPLAY=$DISPLAY_NUM "$BROWSER_BIN" \
     --disable-setuid-sandbox \
     --no-first-run \
     --disable-dev-shm-usage \
+    --password-store=basic \
     "https://gemini.google.com" >/dev/null 2>&1 &
 CHROME_PID=$!
 

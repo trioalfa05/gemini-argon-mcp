@@ -48,7 +48,12 @@ async function getBrowserPage() {
         userDataDir: PROFILE_DIR,
         headless: true, // Berjalan headless di background setelah login selesai
         defaultViewport: { width: 1280, height: 800 },
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--password-store=basic'
+        ]
     });
 
     const pages = await browser.pages();
