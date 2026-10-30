@@ -73,21 +73,29 @@ DISPLAY=$DISPLAY_NUM "$BROWSER_BIN" \
     "https://gemini.google.com" >/dev/null 2>&1 &
 CHROME_PID=$!
 
-# 8. Deteksi IP Server
-SERVER_IP=$(curl -s --max-time 3 https://api.ipify.org 2>/dev/null || hostname -I | awk '{print $1}')
-if [ -z "$SERVER_IP" ]; then
-    SERVER_IP="127.0.0.1"
-fi
+# 8. Deteksi IP (Local, Tailscale, Public)
+TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || ip addr show tailscale0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' || echo "")
+LAN_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+PUBLIC_IP=$(curl -s --max-time 2 https://api.ipify.org 2>/dev/null || echo "")
 
-# 9. Tampilkan Banner Link Web secara Bersih & Langsung
+# 9. Tampilkan Banner Link Web secara Lengkap
 clear
 echo "===================================================================="
 echo " 🌐 GEMINI ARGON VPS WEB-LOGIN SCREEN BERHASIL AKTIF!"
 echo "===================================================================="
 echo ""
-echo " Silakan klik / buka link berikut di browser HP atau Laptop Anda:"
+echo " Silakan buka link sesuai jaringan yang Anda gunakan:"
 echo ""
-echo " 👉 http://${SERVER_IP}:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=remote"
+echo " 💻 Local      : http://localhost:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=remote"
+if [ -n "$TAILSCALE_IP" ]; then
+echo " 🔒 Tailscale  : http://${TAILSCALE_IP}:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=remote"
+fi
+if [ -n "$LAN_IP" ] && [ "$LAN_IP" != "127.0.0.1" ]; then
+echo " 🏠 LAN        : http://${LAN_IP}:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=remote"
+fi
+if [ -n "$PUBLIC_IP" ]; then
+echo " 🌍 Public     : http://${PUBLIC_IP}:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=remote"
+fi
 echo ""
 echo "--------------------------------------------------------------------"
 echo " Langkah di layar web:"
