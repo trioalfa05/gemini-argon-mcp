@@ -1,0 +1,27 @@
+{
+  "name": "gemini-argon-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) Server for Google Gemini Web (Argon & Web Exclusive Models) with Headless VPS Web-Login Support",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "login": "node scripts/login.js",
+    "login:vps": "bash scripts/vps-web-login.sh"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gemini",
+    "argon",
+    "gemini-web",
+    "ai-agent",
+    "puppeteer"
+  ],
+  "author": "Adapasi & Community",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "puppeteer-core": "^24.4.0"
+  }
+}
