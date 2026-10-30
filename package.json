@@ -5,9 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
-    "login": "node scripts/login.js",
-    "login:vps": "bash scripts/vps-web-login.sh"
+    "start": "node index.js"
   },
   "keywords": [
     "mcp",

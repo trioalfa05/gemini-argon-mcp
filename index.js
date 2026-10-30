@@ -6,6 +6,27 @@ import puppeteer from "puppeteer-core";
 import path from "path";
 import fs from "fs";
 
+// Baca file .env manual tanpa dependensi tambahan
+function loadEnv() {
+    const envPath = path.join(process.cwd(), ".env");
+    if (!fs.existsSync(envPath)) return;
+    const lines = fs.readFileSync(envPath, "utf-8").split("\n");
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx !== -1) {
+            const key = trimmed.substring(0, eqIdx).trim();
+            let val = trimmed.substring(eqIdx + 1).trim();
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                val = val.slice(1, -1);
+            }
+            process.env[key] = val;
+        }
+    }
+}
+loadEnv();
+
 // Deteksi path browser di sistem
 function getBrowserPath() {
     const paths = [
@@ -19,7 +40,7 @@ function getBrowserPath() {
     for (const p of paths) {
         if (fs.existsSync(p)) return p;
     }
-    return "/usr/bin/chromium"; // Fallback default
+    return "/usr/bin/chromium";
 }
 
 const CHROME_PATH = getBrowserPath();
@@ -46,7 +67,7 @@ async function getBrowserPage() {
     browser = await puppeteer.launch({
         executablePath: CHROME_PATH,
         userDataDir: PROFILE_DIR,
-        headless: true, // Berjalan headless di background setelah login selesai
+        headless: true,
         defaultViewport: { width: 1280, height: 800 },
         args: [
             '--no-sandbox',
@@ -58,8 +79,34 @@ async function getBrowserPage() {
 
     const pages = await browser.pages();
     page = pages.length > 0 ? pages[0] : await browser.newPage();
+
+    // Suntikkan Cookie jika diset di .env
+    const psid = process.env.GEMINI_SECURE_1PSID;
+    const psidts = process.env.GEMINI_SECURE_1PSIDTS;
+
+    if (psid && psidts && psid !== "paste_nilai___Secure-1PSID_disini") {
+        const cookies = [
+            {
+                name: "__Secure-1PSID",
+                value: psid,
+                domain: ".google.com",
+                path: "/",
+                secure: true,
+                httpOnly: true
+            },
+            {
+                name: "__Secure-1PSIDTS",
+                value: psidts,
+                domain: ".google.com",
+                path: "/",
+                secure: true,
+                httpOnly: true
+            }
+        ];
+        await page.setCookie(...cookies);
+    }
     
-    await page.goto("https://gemini.google.com/", { waitUntil: 'networkidle2' });
+    await page.goto("https://gemini.google.com/app", { waitUntil: 'networkidle2' });
     return page;
 }
 
@@ -93,15 +140,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         try {
             const p = await getBrowserPage();
             
-            // Cek apakah halaman redirect ke login Google
-            if (p.url().includes("accounts.google.com")) {
+            // Cek apakah halaman meminta login
+            const isLoggedOut = await p.evaluate(() => {
+                const text = document.body.innerText || "";
+                return text.includes("Sign in") || window.location.href.includes("accounts.google.com");
+            });
+
+            if (isLoggedOut) {
                 return {
-                    content: [{ type: "text", text: "❌ Sesi login Google kedaluwarsa atau belum ada. Silakan jalankan `npm run login:vps` (di VPS) atau `npm run login` (di lokal) untuk login ulang." }],
+                    content: [{ type: "text", text: "❌ Cookie sesi Google belum diatur atau sudah kedaluwarsa. Silakan masukkan cookie terbaru di file `.env` (GEMINI_SECURE_1PSID & GEMINI_SECURE_1PSIDTS)." }],
                     isError: true
                 };
             }
 
-            await p.waitForSelector('rich-textarea p, div[contenteditable="true"]', { timeout: 10000 });
+            // Pastikan model yang terpilih adalah Argon jika tersedia
+            try {
+                await p.evaluate(() => {
+                    const picker = document.querySelector('button[aria-label*="mode picker"], button[aria-label*="pilih model"]');
+                    if (picker && !picker.innerText.includes("Argon")) {
+                        picker.click();
+                        setTimeout(() => {
+                            const items = Array.from(document.querySelectorAll('[role="menuitem"], [role="option"]'));
+                            const argon = items.find(el => el.innerText.includes("Argon"));
+                            if (argon) argon.click();
+                        }, 500);
+                    }
+                });
+                await new Promise(r => setTimeout(r, 1000));
+            } catch (e) {
+                // Ignore jika mode picker tidak terbuka
+            }
+
+            // Ketik prompt
+            await p.waitForSelector('rich-textarea p, div[contenteditable="true"]', { timeout: 15000 });
             await p.click('div[contenteditable="true"]');
             
             await p.evaluate((text) => {
@@ -115,7 +186,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             
             await new Promise(r => setTimeout(r, 1000));
             await p.evaluate(() => {
-                const sendBtn = document.querySelector('button[aria-label*="Kirim"], button.send-button, button[mat-fab]');
+                const sendBtn = document.querySelector('button[aria-label*="Kirim"], button.send-button, button[mat-fab], button[aria-label*="Send"]');
                 if (sendBtn) sendBtn.click();
             });
             
@@ -124,7 +195,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             await new Promise(r => setTimeout(r, 15000));
             
             const responseText = await p.evaluate(() => {
-                const responses = document.querySelectorAll('message-content, .model-response-text, .response-container');
+                const responses = document.querySelectorAll('message-content, .model-response-text, .response-container, assistant-messages-primary');
                 if (responses.length === 0) return "Tidak ditemukan elemen respons.";
                 const last = responses[responses.length - 1];
                 return last.innerText || last.textContent;
