@@ -12,9 +12,13 @@ mkdir -p "$PROFILE_DIR"
 cleanup() {
     echo ""
     echo "=================================================="
-    echo " Menghentikan Web-Screen & Virtual Display..."
+    echo " Menyimpan sesi & Menutup Browser..."
     echo "=================================================="
-    kill -9 $CHROME_PID $NOVNC_PID $X11VNC_PID $XVFB_PID 2>/dev/null || true
+    # Beri sinyal SIGTERM agar Chromium flush SQLite cookies ke disk secara rapi
+    kill -TERM $CHROME_PID 2>/dev/null || true
+    sleep 2
+    kill -9 $NOVNC_PID $X11VNC_PID $XVFB_PID 2>/dev/null || true
+    kill -9 $CHROME_PID 2>/dev/null || true
     echo "✅ Sesi browser tersimpan aman di: $PROFILE_DIR"
     echo "Server MCP sekarang siap dijalankan!"
     exit 0
