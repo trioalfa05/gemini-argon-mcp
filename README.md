@@ -2,88 +2,79 @@
 
 Model Context Protocol (MCP) Server mandiri untuk menjembatani **Google Gemini Web UI** (khususnya model eksklusif browser seperti **Gemini Argon**) ke berbagai AI Client/Agent (seperti **Hermes Agent**, **Claude Desktop**, atau **Cursor**).
 
-Dirancang khusus agar dapat berjalan **100% di Server VPS Headless (Murni Terminal)** tanpa memerlukan desktop fisik atau menjaga laptop tetap terbuka.
+Dirancang khusus agar berjalan **100% mandiri di Server VPS Linux CLI** tanpa kerumitan instalasi layar virtual (noVNC/Xvfb). Cukup masukkan cookie akun Anda sekali saja!
 
 ---
 
-## 🌟 Fitur Utama
+## 🌟 Keunggulan Versi Baru (Zero-VNC Architecture)
 
-- **Headless VPS Ready**: Berjalan di background server tanpa monitor fisik.
-- **Web-Screen 1-Click Login (noVNC)**: Login Google 2FA di VPS cukup buka link di browser HP/Laptop.
-- **Persistent Profile**: Sesi Google & pemilihan model Argon tersimpan permanen di folder `gemini_profile/`.
-- **Zero Token/API Cost**: Menggunakan kuota akun Gemini web Anda langsung.
-- **Multi-Client Support**: Kompatibel dengan semua AI Client yang mendukung MCP protocol.
+- **Tanpa Layar Virtual / VNC**: Tidak perlu install `xvfb`, `x11vnc`, `novnc`, atau buka-buka port VNC.
+- **Ringan & Hemat Resource**: Berjalan murni headless di background Linux.
+- **Anti-Logout**: Menggunakan session cookie resmi dari browser laptop/HP Anda.
+- **Zero Cost / API Token**: Memanfaatkan kuota model web Google Gemini Anda secara penuh.
 
 ---
 
 ## 📋 Persyaratan Sistem
 
 - **Node.js**: v18 atau lebih baru.
-- **Chromium / Google Chrome**: Terinstal di sistem.
-- **Linux VPS (Debian/Ubuntu)**: Paket `xvfb`, `x11vnc`, `novnc`, `websockify` (akan otomatis diinstall oleh script jika belum ada).
+- **Chromium / Google Chrome**: Terinstal di sistem (`apt install chromium` di Debian/Ubuntu).
 
 ---
 
-## 🚀 Panduan Instalasi Cepat
+## 🚀 Panduan Setup Instan (Hanya 3 Langkah)
 
 ### 1. Clone & Install Dependensi
 
 ```bash
-git clone https://github.com/username/gemini-argon-mcp.git
+git clone https://github.com/trioalfa05/gemini-argon-mcp.git
 cd gemini-argon-mcp
 npm install
 ```
 
 ---
 
-## 🔑 Langkah Login Akun Google
+### 2. Konfigurasi Cookie Google (`.env`)
 
-Pilih metode yang sesuai dengan lingkungan perangkat Anda:
-
-### Opsi A: Jika Berjalan di Server VPS Murni Terminal (Paling Direkomendasikan)
-Gunakan fitur **Web-Screen**:
+Salin template file `.env`:
 ```bash
-npm run login:vps
+cp .env.example .env
+nano .env
 ```
-1. Script akan otomatis memunculkan URL sesuai jaringan Anda (Tailscale / LAN / Local):
-   ```text
-   👉 http://100.x.x.x:6080/vnc.html?autoconnect=true&resize=remote
+
+**Cara mengambil 2 nilai cookie dari browser laptop Anda:**
+1. Buka browser (Chrome/Edge/Brave) yang sudah login ke **https://gemini.google.com**.
+2. Tekan **F12** (atau klik kanan -> *Inspect* / Periksa).
+3. Pilih tab **Application** (atau **Storage** di Firefox) -> di kolom kiri klik **Cookies** -> `https://gemini.google.com`.
+4. Salin nilai (*Value*) dari 2 cookie ini:
+   - `__Secure-1PSID`
+   - `__Secure-1PSIDTS`
+5. Masukkan ke file `.env`:
+   ```env
+   GEMINI_SECURE_1PSID="paste_nilai___Secure-1PSID_disini"
+   GEMINI_SECURE_1PSIDTS="paste_nilai___Secure-1PSIDTS_disini"
    ```
-2. Buka link tersebut di browser HP atau laptop Anda.
-3. Di layar virtual yang muncul:
-   - Login ke akun Google Anda (dan selesaikan 2FA).
-   - Di dropdown model Gemini, **pilih model Argon**.
-4. Setelah selesai, kembali ke terminal server dan tekan `Ctrl + C`.  
-   *(Sesi login Anda sudah tersimpan permanen di folder `gemini_profile/`)*.
+6. Simpan dengan menekan **Ctrl + O**, Enter, lalu keluar dengan **Ctrl + X**.
 
 ---
 
-### Opsi B: Jika Berjalan di PC / Laptop Lokal (Windows, Mac, atau Linux GUI)
-Cukup jalankan:
-```bash
-npm run login
-```
-Jendela browser Chrome akan terbuka otomatis. Login dan pilih model **Argon**, lalu tutup jendela browser.
-
----
-
-## 🔌 Cara Menghubungkan ke Hermes Agent
+### 3. Sambungkan ke Hermes Agent
 
 Daftarkan server MCP ke Hermes langsung dari dalam folder proyek:
 ```bash
 hermes mcp add gemini-argon --command node --args $(pwd)/index.js
 ```
-*(Saat muncul pertanyaan `Enable all 1 tools? [Y/n]`, tekan **Y** lalu Enter)*.
+*(Saat muncul konfirmasi `Enable all 1 tools? [Y/n]`, tekan **Y** lalu Enter)*.
 
 ---
 
 ## 🛠️ Cara Penggunaan di Chat AI
 
-Setelah terpasang, Anda cukup berbicara santai dengan AI Anda:
+Setelah terdaftar, Anda bisa langsung berbicara santai di chat:
 * *"Tolong analisis arsitektur microservice ini menggunakan model Gemini Argon."*
-* *"Tanyakan ke Argon bagaimana cara optimasi query database ini."*
+* *"Tanyakan ke Argon bagaimana cara optimasi performa query database ini."*
 
-AI Agent akan otomatis memanggil tool `ask_gemini_argon` di background dan menyajikan hasilnya secara rapi!
+AI Agent akan otomatis memanggil tool `ask_gemini_argon` di background dan mengembalikan jawabannya secara rapi!
 
 ---
 

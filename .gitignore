@@ -1,4 +1,5 @@
 node_modules/
 gemini_profile/
 .DS_Store
+.env
 *.log
