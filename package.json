@@ -1,7 +1,7 @@
 {
   "name": "gemini-argon-mcp",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) Server for Google Gemini Web (Argon & Web Exclusive Models) with Headless VPS Web-Login Support",
+  "description": "Standalone Model Context Protocol (MCP) Server for Google Gemini Web (Argon & Reasoning Models) for Linux VPS & AI Agents",
   "main": "index.js",
   "type": "module",
   "scripts": {
