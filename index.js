@@ -172,30 +172,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
 
             // Ketik prompt
-            await p.waitForSelector('rich-textarea p, div[contenteditable="true"]', { timeout: 15000 });
+            await p.waitForSelector('div[contenteditable="true"]', { timeout: 15000 });
             await p.click('div[contenteditable="true"]');
             
-            await p.evaluate((text) => {
-                const el = document.querySelector('div[contenteditable="true"]');
-                if (el) {
-                    el.focus();
-                    document.execCommand('selectAll', false, null);
-                    document.execCommand('insertText', false, text);
-                }
-            }, promptText);
-            
-            await new Promise(r => setTimeout(r, 1000));
-            await p.evaluate(() => {
-                const sendBtn = document.querySelector('button[aria-label*="Kirim"], button.send-button, button[mat-fab], button[aria-label*="Send"]');
-                if (sendBtn) sendBtn.click();
-            });
+            // Masukkan teks prompt
+            await p.type('div[contenteditable="true"]', promptText);
+            await new Promise(r => setTimeout(r, 500));
+            await p.keyboard.press("Enter");
             
             // Tunggu respons selesai
-            console.error("Menunggu respons Gemini Argon...");
-            await new Promise(r => setTimeout(r, 15000));
+            console.error("Menunggu respons Gemini...");
+            await new Promise(r => setTimeout(r, 10000));
             
             const responseText = await p.evaluate(() => {
-                const responses = document.querySelectorAll('message-content, .model-response-text, .response-container, assistant-messages-primary');
+                const responses = document.querySelectorAll('message-content, .model-response-text, model-response');
                 if (responses.length === 0) return "Tidak ditemukan elemen respons.";
                 const last = responses[responses.length - 1];
                 return last.innerText || last.textContent;
